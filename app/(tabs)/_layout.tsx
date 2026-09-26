@@ -16,11 +16,11 @@ export default function TabLayout() {
             md="flight"
           />
         </NativeTabs.Trigger>
-        <NativeTabs.Trigger name="settings" disableAutomaticContentInsets>
-          <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger name="profile" disableAutomaticContentInsets>
+          <NativeTabs.Trigger.Label>Profile</NativeTabs.Trigger.Label>
           <NativeTabs.Trigger.Icon
-            sf={{ default: 'gearshape', selected: 'gearshape.fill' }}
-            md="settings"
+            sf={{ default: 'person.crop.circle', selected: 'person.crop.circle.fill' }}
+            md="person"
           />
         </NativeTabs.Trigger>
       </NativeTabs>

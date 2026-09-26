@@ -4,6 +4,7 @@
     "": {
       "name": "flight-tracker",
       "dependencies": {
+        "@expo/ui": "~57.0.20",
         "expo": "~57.0.25",
         "expo-constants": "~57.0.19",
         "expo-dev-client": "~57.0.19",
