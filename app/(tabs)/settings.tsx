@@ -11,7 +11,7 @@ const rows = [
 
 export default function SettingsScreen() {
   return (
-    <TabScreen title="Settings" subtitle="Neutral defaults">
+    <TabScreen title="Settings" subtitle="Preferences">
       {rows.map((row) => (
         <GlassSurface key={row.label} isInteractive style={{ borderRadius: 18, padding: 16 }}>
           <View className="flex-row items-center justify-between">

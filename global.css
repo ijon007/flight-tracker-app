@@ -4,21 +4,23 @@
 @layer theme {
   :root {
     @variant light {
-      --color-canvas: #f4f4f5;
-      --color-canvas-deep: #e4e4e7;
-      --color-ink: #18181b;
-      --color-muted: #71717a;
-      --color-hairline: #d4d4d8;
-      --color-fallback-glass: #f4f4f5;
+      --color-canvas: #f2f2f7;
+      --color-canvas-deep: #e5e5ea;
+      --color-ink: #000000;
+      --color-muted: #8e8e93;
+      --color-accent: #007aff;
+      --color-hairline: #c6c6c8;
+      --color-fallback-glass: #ffffff;
     }
 
     @variant dark {
-      --color-canvas: #18181b;
-      --color-canvas-deep: #09090b;
-      --color-ink: #fafafa;
-      --color-muted: #a1a1aa;
-      --color-hairline: #3f3f46;
-      --color-fallback-glass: #27272a;
+      --color-canvas: #000000;
+      --color-canvas-deep: #1c1c1e;
+      --color-ink: #ffffff;
+      --color-muted: #8e8e93;
+      --color-accent: #0a84ff;
+      --color-hairline: #38383a;
+      --color-fallback-glass: #1c1c1e;
     }
   }
 }

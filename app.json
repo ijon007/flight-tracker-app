@@ -10,10 +10,14 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.flighttracker.app"
+      "bundleIdentifier": "com.flighttracker.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Shows your location on the map."
+      }
     },
     "android": {
       "package": "com.flighttracker.app",
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
       "adaptiveIcon": {
         "backgroundColor": "#F4F4F5",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

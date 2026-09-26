@@ -35,9 +35,9 @@ export function GlassSurface({
   const scheme = useColorScheme();
   const fallback = !hasLiquidGlass
     ? {
-        backgroundColor: scheme === 'dark' ? '#27272A' : '#F4F4F5',
+        backgroundColor: scheme === 'dark' ? '#1C1C1E' : '#FFFFFF',
         borderWidth: StyleSheet.hairlineWidth,
-        borderColor: scheme === 'dark' ? '#3F3F46' : '#D4D4D8',
+        borderColor: scheme === 'dark' ? '#38383A' : '#C6C6C8',
       }
     : undefined;
 
