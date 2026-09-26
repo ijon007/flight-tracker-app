@@ -1,70 +1,45 @@
-import { SymbolView } from 'expo-symbols';
-import { Link, Tabs } from 'expo-router';
-import { Platform, Pressable } from 'react-native';
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
+import { TabBarMinimizeProvider } from 'expo-glass-tabs';
+import { DynamicColorIOS, Platform } from 'react-native';
 
-import Colors from '@/constants/Colors';
-import { useColorScheme } from '@/components/useColorScheme';
-import { useClientOnlyValue } from '@/components/useClientOnlyValue';
+const ink = Platform.OS === 'ios' ? DynamicColorIOS({ light: '#18181B', dark: '#FAFAFA' }) : '#18181B';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
-          ),
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable style={{ marginRight: 15 }}>
-                {({ pressed }) => (
-                  <SymbolView
-                    name={{ ios: 'info.circle', android: 'info', web: 'info' }}
-                    size={25}
-                    tintColor={Colors[colorScheme].text}
-                    style={{ opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="two"
-        options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{
-                ios: 'chevron.left.forwardslash.chevron.right',
-                android: 'code',
-                web: 'code',
-              }}
-              tintColor={color}
-              size={28}
-            />
-          ),
-        }}
-      />
-    </Tabs>
+    <TabBarMinimizeProvider>
+      <NativeTabs
+        minimizeBehavior="never"
+        tintColor={ink}
+        labelStyle={{ color: ink }}>
+        <NativeTabs.Trigger name="index" disableAutomaticContentInsets>
+          <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Icon
+            sf={{ default: 'house', selected: 'house.fill' }}
+            md="home"
+          />
+        </NativeTabs.Trigger>
+        <NativeTabs.Trigger name="flights" disableAutomaticContentInsets>
+          <NativeTabs.Trigger.Label>Flights</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Icon
+            sf={{ default: 'airplane', selected: 'airplane' }}
+            md="flight"
+          />
+        </NativeTabs.Trigger>
+        <NativeTabs.Trigger name="map" disableAutomaticContentInsets>
+          <NativeTabs.Trigger.Label>Map</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Icon
+            sf={{ default: 'map', selected: 'map.fill' }}
+            md="map"
+          />
+        </NativeTabs.Trigger>
+        <NativeTabs.Trigger name="settings" disableAutomaticContentInsets>
+          <NativeTabs.Trigger.Label>Settings</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Icon
+            sf={{ default: 'gearshape', selected: 'gearshape.fill' }}
+            md="settings"
+          />
+        </NativeTabs.Trigger>
+      </NativeTabs>
+    </TabBarMinimizeProvider>
   );
 }

@@ -1,0 +1,24 @@
+@import 'tailwindcss';
+@import 'uniwind';
+
+@layer theme {
+  :root {
+    @variant light {
+      --color-canvas: #f4f4f5;
+      --color-canvas-deep: #e4e4e7;
+      --color-ink: #18181b;
+      --color-muted: #71717a;
+      --color-hairline: #d4d4d8;
+      --color-fallback-glass: #f4f4f5;
+    }
+
+    @variant dark {
+      --color-canvas: #18181b;
+      --color-canvas-deep: #09090b;
+      --color-ink: #fafafa;
+      --color-muted: #a1a1aa;
+      --color-hairline: #3f3f46;
+      --color-fallback-glass: #27272a;
+    }
+  }
+}
