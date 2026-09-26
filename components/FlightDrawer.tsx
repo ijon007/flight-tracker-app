@@ -1,17 +1,28 @@
-import { useEffect, useMemo } from 'react';
+/* eslint-disable react-hooks/immutability -- shared values are written from the gesture and the snap effect */
+import { useEffect, useMemo, useRef } from 'react';
 import { ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
   withSpring,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AddFlightPanel } from '@/components/AddFlightPanel';
+import { useDrawerMode, type DrawerMode } from '@/components/DrawerMode';
 import { GlassSurface } from '@/components/GlassSurface';
 import { DRAWER_HEADER, resist, snapHeight } from '@/components/flightDrawerSnap';
+import { ProfilePanel } from '@/components/ProfilePanel';
 
 const SPRING = { damping: 32, stiffness: 320, mass: 0.7 };
+
+const TITLES: Record<DrawerMode, string> = {
+  flights: 'My Flights',
+  add: 'Add Flight',
+  profile: 'Profile',
+};
 
 /** The native tab bar floats inside the bottom of the sheet; this reserves its space. */
 const TAB_BAR_HEIGHT = 12;
@@ -68,19 +79,21 @@ function Leg({ code, time }: { code: string; time: string }) {
 export function FlightDrawer() {
   const insets = useSafeAreaInsets();
   const { height: screenH } = useWindowDimensions();
+  const { mode } = useDrawerMode();
+  const reducedMotion = useReducedMotion();
+  /** Add Flight and Profile open the tall sheet; collapsing keeps the current mode. */
+  const panel = mode !== 'flights';
   const tabZone = insets.bottom + TAB_BAR_HEIGHT - DRAWER_INSET;
   const collapsed = DRAWER_HEADER + tabZone;
-  const expanded = Math.round(Math.min(screenH * 0.46, 440)) + tabZone;
+  const flightsExpanded = Math.round(Math.min(screenH * 0.46, 440)) + tabZone;
+  const panelExpanded = Math.round(screenH - insets.top - 8);
   const minH = useSharedValue(collapsed);
-  const maxH = useSharedValue(expanded);
-  const height = useSharedValue(expanded);
-  const origin = useSharedValue(expanded);
-
-  useEffect(() => {
-    minH.value = collapsed;
-    maxH.value = expanded;
-    height.value = Math.min(Math.max(height.value, collapsed), expanded);
-  }, [collapsed, expanded, height, maxH, minH]);
+  const maxH = useSharedValue(panel ? panelExpanded : flightsExpanded);
+  const height = useSharedValue(panel ? panelExpanded : flightsExpanded);
+  const origin = useSharedValue(height.value);
+  const saved = useSharedValue(flightsExpanded);
+  const reduceSv = useSharedValue(reducedMotion);
+  const prevMode = useRef(mode);
 
   const pan = useMemo(
     () =>
@@ -95,9 +108,11 @@ export function FlightDrawer() {
         .onEnd((e) => {
           const dragged = origin.value - e.translationY;
           const target = snapHeight(dragged, minH.value, maxH.value, e.velocityY);
-          height.value = withSpring(target, { ...SPRING, velocity: -e.velocityY });
+          height.value = reduceSv.value
+            ? target
+            : withSpring(target, { ...SPRING, velocity: -e.velocityY });
         }),
-    [height, maxH, minH, origin],
+    [height, maxH, minH, origin, reduceSv],
   );
 
   const tap = useMemo(
@@ -105,10 +120,45 @@ export function FlightDrawer() {
       Gesture.Tap().onEnd(() => {
         const mid = (minH.value + maxH.value) / 2;
         const target = height.value < mid ? maxH.value : minH.value;
-        height.value = withSpring(target, SPRING);
+        height.value = reduceSv.value ? target : withSpring(target, SPRING);
       }),
-    [height, maxH, minH],
+    [height, maxH, minH, reduceSv],
   );
+
+  useEffect(() => {
+    const wasPanel = prevMode.current !== 'flights';
+    const switched = prevMode.current !== mode;
+    const entered = !wasPanel && panel;
+    const left = wasPanel && !panel;
+    prevMode.current = mode;
+    reduceSv.value = reducedMotion;
+    minH.value = collapsed;
+    maxH.value = panel ? panelExpanded : flightsExpanded;
+
+    if (entered) saved.value = height.value;
+    if (entered || (switched && panel)) {
+      height.value = reducedMotion ? panelExpanded : withSpring(panelExpanded, SPRING);
+      return;
+    }
+    if (left) {
+      const back = Math.min(Math.max(saved.value, collapsed), flightsExpanded);
+      height.value = reducedMotion ? back : withSpring(back, SPRING);
+      return;
+    }
+    height.value = Math.min(Math.max(height.value, collapsed), maxH.value);
+  }, [
+    panelExpanded,
+    panel,
+    collapsed,
+    flightsExpanded,
+    height,
+    maxH,
+    minH,
+    mode,
+    reduceSv,
+    reducedMotion,
+    saved,
+  ]);
 
   const gesture = useMemo(() => Gesture.Exclusive(pan, tap), [pan, tap]);
 
@@ -137,7 +187,7 @@ export function FlightDrawer() {
         <GestureDetector gesture={gesture}>
           <View
             accessibilityRole="button"
-            accessibilityLabel="Flights"
+            accessibilityLabel={TITLES[mode]}
             style={{ height: DRAWER_HEADER, paddingHorizontal: 22 }}>
             <View
               style={{
@@ -149,41 +199,53 @@ export function FlightDrawer() {
                 backgroundColor: 'rgba(255,255,255,0.42)',
               }}
             />
-            <Text className="mt-2 text-[28px] font-semibold text-white">My Flights</Text>
+            <Text
+              className="mt-2 text-[28px] font-semibold text-white"
+              style={{ letterSpacing: -0.4 }}>
+              {TITLES[mode]}
+            </Text>
           </View>
         </GestureDetector>
-        <ScrollView
-          style={{ flex: 1 }}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 22, paddingBottom: 22, gap: 18 }}>
-          {flights.map((flight) => (
-            <View key={flight.id} className="flex-row">
-              <View className="w-[72px]">
-                <Text className="text-[40px] font-semibold leading-none text-white">
-                  {flight.hours}
-                </Text>
-                <Text className="mt-1 text-[11px] font-semibold tracking-widest text-white/45">
-                  HOURS
-                </Text>
-              </View>
-              <View className="flex-1 pt-1">
-                <View className="flex-row items-start justify-between gap-3">
-                  <Text className="text-[17px] font-semibold text-white">{flight.code}</Text>
-                  <Text className="text-[13px] text-white/70">
-                    Departs <Text className="text-[#30D158]">On Time</Text>
+        {/* Profile stays mounted so its edits survive switching drawer modes. */}
+        <View style={{ flex: 1, display: mode === 'profile' ? 'flex' : 'none' }}>
+          <ProfilePanel />
+        </View>
+        {mode === 'profile' ? null : mode === 'add' ? (
+          <AddFlightPanel />
+        ) : (
+          <ScrollView
+            style={{ flex: 1 }}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 22, paddingBottom: 22, gap: 18 }}>
+            {flights.map((flight) => (
+              <View key={flight.id} className="flex-row">
+                <View className="w-[72px]">
+                  <Text className="text-[40px] font-semibold leading-none text-white">
+                    {flight.hours}
+                  </Text>
+                  <Text className="mt-1 text-[11px] font-semibold tracking-widest text-white/45">
+                    HOURS
                   </Text>
                 </View>
-                <Text className="mt-0.5 text-[17px] text-white">
-                  {flight.fromCity} to {flight.toCity}
-                </Text>
-                <View className="mt-2 flex-row gap-4">
-                  <Leg code={flight.from} time={flight.departs} />
-                  <Leg code={flight.to} time={flight.arrives} />
+                <View className="flex-1 pt-1">
+                  <View className="flex-row items-start justify-between gap-3">
+                    <Text className="text-[17px] font-semibold text-white">{flight.code}</Text>
+                    <Text className="text-[13px] text-white/70">
+                      Departs <Text className="text-[#30D158]">On Time</Text>
+                    </Text>
+                  </View>
+                  <Text className="mt-0.5 text-[17px] text-white">
+                    {flight.fromCity} to {flight.toCity}
+                  </Text>
+                  <View className="mt-2 flex-row gap-4">
+                    <Leg code={flight.from} time={flight.departs} />
+                    <Leg code={flight.to} time={flight.arrives} />
+                  </View>
                 </View>
               </View>
-            </View>
-          ))}
-        </ScrollView>
+            ))}
+          </ScrollView>
+        )}
         <View pointerEvents="none" style={{ height: tabZone }} />
       </GlassSurface>
     </Animated.View>

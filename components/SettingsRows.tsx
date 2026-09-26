@@ -1,6 +1,6 @@
 import { SymbolView } from 'expo-symbols';
 import { Children, Fragment, type ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { GlassSurface } from '@/components/GlassSurface';
 import { MenuSelect } from '@/components/MenuSelect';
@@ -10,11 +10,22 @@ export function Section({ title, children }: { title?: string; children: ReactNo
   const rows = Children.toArray(children);
   return (
     <View className="gap-2.5">
-      {title ? <Text className="px-5 text-[13px] text-muted">{title}</Text> : null}
+      {title ? (
+        <Text
+          className="px-5 text-[13px] font-semibold uppercase tracking-wide"
+          style={{ color: 'rgba(255,255,255,0.7)' }}>
+          {title}
+        </Text>
+      ) : null}
       <GlassSurface style={{ borderRadius: 20 }}>
         {rows.map((row, i) => (
           <Fragment key={i}>
-            {i > 0 ? <View className="mx-5 h-px bg-hairline" /> : null}
+            {i > 0 ? (
+              <View
+                className="mx-5"
+                style={{ height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(255,255,255,0.18)' }}
+              />
+            ) : null}
             {row}
           </Fragment>
         ))}
