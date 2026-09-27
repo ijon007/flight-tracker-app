@@ -163,6 +163,7 @@ export function AddFlightPanel() {
                 to: f.to,
                 departs: f.departs,
                 arrives: f.arrives,
+                minutes: f.minutes,
               });
               close();
             }}

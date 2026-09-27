@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/immutability -- shared values are written from the gesture and the snap effect */
 import { SymbolView } from 'expo-symbols';
 import { useEffect, useMemo, useRef } from 'react';
-import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -15,6 +15,7 @@ import { AddFlightPanel } from '@/components/AddFlightPanel';
 import { useDrawerMode, type DrawerMode } from '@/components/DrawerMode';
 import { GlassSurface } from '@/components/GlassSurface';
 import { DRAWER_HEADER, resist, snapHeight } from '@/components/flightDrawerSnap';
+import { FlightStack } from '@/components/FlightStack';
 import { ProfilePanel } from '@/components/ProfilePanel';
 
 const SPRING = { damping: 32, stiffness: 320, mass: 0.7 };
@@ -30,18 +31,6 @@ const TAB_BAR_HEIGHT = 12;
 const DRAWER_INSET = 10;
 // ponytail: concentric with modern iPhone corners (~52) minus the inset. Read the real display radius if it looks off on older devices.
 const DRAWER_RADIUS = 42;
-
-const hoursUntil = (at: number) => Math.max(0, Math.round((at - Date.now()) / 3_600_000));
-
-function Leg({ code, time }: { code: string; time: string }) {
-  return (
-    <View className="flex-row items-center gap-1.5">
-      <View className="h-1.5 w-1.5 rounded-full bg-[#30D158]" />
-      <Text className="text-[15px] font-medium text-white">{code}</Text>
-      <Text className="text-[15px] font-medium text-[#30D158]">{time}</Text>
-    </View>
-  );
-}
 
 export function FlightDrawer() {
   const insets = useSafeAreaInsets();
@@ -205,40 +194,7 @@ export function FlightDrawer() {
         <View style={{ flex: 1, display: mode === 'add' ? 'flex' : 'none' }}>
           <AddFlightPanel />
         </View>
-        {mode !== 'flights' ? null : (
-          <ScrollView
-            style={{ flex: 1 }}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 22, paddingBottom: 22, gap: 18 }}>
-            {myFlights.map((flight) => (
-              <View key={flight.id} className="flex-row">
-                <View className="w-[72px]">
-                  <Text className="text-[40px] font-semibold leading-none text-white">
-                    {hoursUntil(flight.departsAt)}
-                  </Text>
-                  <Text className="mt-1 text-[11px] font-semibold tracking-widest text-white/45">
-                    HOURS
-                  </Text>
-                </View>
-                <View className="flex-1 pt-1">
-                  <View className="flex-row items-start justify-between gap-3">
-                    <Text className="text-[17px] font-semibold text-white">{flight.code}</Text>
-                    <Text className="text-[13px] text-white/70">
-                      Departs <Text className="text-[#30D158]">On Time</Text>
-                    </Text>
-                  </View>
-                  <Text className="mt-0.5 text-[17px] text-white">
-                    {flight.fromCity} to {flight.toCity}
-                  </Text>
-                  <View className="mt-2 flex-row gap-4">
-                    <Leg code={flight.from} time={flight.departs} />
-                    <Leg code={flight.to} time={flight.arrives} />
-                  </View>
-                </View>
-              </View>
-            ))}
-          </ScrollView>
-        )}
+        {mode !== 'flights' ? null : <FlightStack flights={myFlights} />}
         <View pointerEvents="none" style={{ height: tabZone }} />
       </GlassSurface>
     </Animated.View>
