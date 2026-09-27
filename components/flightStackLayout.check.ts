@@ -1,4 +1,4 @@
-import { countdown, dateLabel, gradientFor, PEEK, placeCard, shareText, stackHeight } from './flightStackLayout';
+import { countdown, dateLabel, gradientFor, PEEK, placeCard, shareText, stackHeight, stripLabel } from './flightStackLayout';
 
 function assert(condition: boolean, message: string) {
   if (!condition) throw new Error(message);
@@ -15,7 +15,11 @@ assert(stackHeight(1, 0, H) === H, 'lone open card has no pile');
 assert(stackHeight(0, -1, H) === 0, 'empty stack');
 assert(gradientFor('AZ507') === gradientFor('AZ507'), 'color is stable per flight');
 assert(countdown(0, 0) === 'Now', 'departing now');
+assert(countdown(45 * 60_000, 0) === 'in 45m', 'minutes under an hour');
 assert(countdown(10 * 3_600_000, 0) === 'in 10h', 'hours');
+const status = { phase: 'delayed', label: 'Delayed 20m', delayMinutes: 20, departsAt: 3_600_000, arrivesAt: 0 } as const;
+assert(stripLabel(status, 0) === 'in 1h', 'strip counts down to the estimated departure');
+assert(stripLabel({ ...status, phase: 'departed', label: 'In Air' }, 0) === 'In Air', 'strip shows the phase once underway');
 assert(countdown(28 * 3_600_000, 0) === 'in 1d 4h', 'days and hours');
 assert(countdown(48 * 3_600_000, 0) === 'in 2d', 'whole days');
 assert(

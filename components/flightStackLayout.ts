@@ -1,3 +1,5 @@
+import type { FlightStatus } from '@/components/flightStatus';
+
 /** Visible strip of a stacked card: just the two airport codes. */
 export const PEEK = 72;
 /** Strip of each card in the pile under an open card. */
@@ -61,9 +63,29 @@ export function shareText(flight: {
 }
 
 export function countdown(at: number, now = Date.now()): string {
-  const h = Math.max(0, Math.round((at - now) / 3_600_000));
-  if (h === 0) return 'Now';
+  const m = Math.max(0, Math.round((at - now) / 60_000));
+  if (m === 0) return 'Now';
+  if (m < 60) return `in ${m}m`;
+  const h = Math.round(m / 60);
   if (h < 24) return `in ${h}h`;
   const d = Math.floor(h / 24);
   return h % 24 === 0 ? `in ${d}d` : `in ${d}d ${h % 24}h`;
+}
+
+/** Top-strip text: a countdown to the estimated departure until the flight is underway. */
+export function stripLabel(status: FlightStatus, now = Date.now()): string {
+  switch (status.phase) {
+    case 'scheduled':
+    case 'delayed':
+      return countdown(status.departsAt, now);
+    case 'boarding':
+    case 'departed':
+    case 'landed':
+    case 'cancelled':
+      return status.label;
+    default: {
+      const never: never = status.phase;
+      return never;
+    }
+  }
 }

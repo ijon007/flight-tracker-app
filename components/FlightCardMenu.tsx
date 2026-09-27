@@ -6,17 +6,19 @@ export type FlightCardMenuProps = {
   radius: number;
   onPress: () => void;
   onShare: () => void;
+  onCalendar: () => void;
   onRemove: () => void;
   children: ReactNode;
 };
 
 const ACTIONS = [
   { id: 'share', title: 'Share', image: 'square.and.arrow.up' as const },
+  { id: 'calendar', title: 'Add to Calendar', image: 'calendar.badge.plus' as const },
   { id: 'remove', title: 'Remove', image: 'trash' as const, attributes: { destructive: true } },
 ];
 
 /** Android dropdown; the card is the trigger. iOS uses FlightCardMenu.ios. */
-export function FlightCardMenu({ onPress, onShare, onRemove, children }: FlightCardMenuProps) {
+export function FlightCardMenu({ onPress, onShare, onCalendar, onRemove, children }: FlightCardMenuProps) {
   return (
     <MenuView
       shouldOpenOnLongPress
@@ -25,6 +27,7 @@ export function FlightCardMenu({ onPress, onShare, onRemove, children }: FlightC
       actions={ACTIONS}
       onPressAction={(e) => {
         if (e.nativeEvent.event === 'share') onShare();
+        if (e.nativeEvent.event === 'calendar') onCalendar();
         if (e.nativeEvent.event === 'remove') onRemove();
       }}>
       <Pressable accessibilityRole="button" onPress={onPress}>

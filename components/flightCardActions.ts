@@ -13,3 +13,6 @@ export async function shareFlight(flight: MyFlight) {
     // User dismissed the sheet; nothing to do.
   }
 }
+
+// ponytail: stub until calendar, Live Activity, and alerts land.
+export async function addFlightToCalendar(_flight: MyFlight) {}
