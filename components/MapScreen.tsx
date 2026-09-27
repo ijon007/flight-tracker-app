@@ -172,35 +172,21 @@ export function MapScreen({ drawer }: { drawer: DrawerMode }) {
 
 const LABEL_HEIGHT = 20;
 
-/** Apple Maps centers the marker view on the coordinate; the empty spacer keeps the dot there. */
 function AirportMarker({ airport }: { airport: Airport }) {
   return (
     <Marker
       coordinate={airport}
       title={airport.name}
       accessibilityLabel={`${airport.code}, ${airport.name}`}>
-      <View style={{ alignItems: 'center', gap: 3 }}>
-        <View
-          style={{
-            height: LABEL_HEIGHT,
-            paddingHorizontal: 7,
-            borderRadius: LABEL_HEIGHT / 2,
-            justifyContent: 'center',
-            backgroundColor: 'rgba(0,0,0,0.7)',
-          }}>
-          <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>{airport.code}</Text>
-        </View>
-        <View
-          style={{
-            width: 10,
-            height: 10,
-            borderRadius: 5,
-            borderWidth: 2,
-            borderColor: '#FFFFFF',
-            backgroundColor: '#0A84FF',
-          }}
-        />
-        <View style={{ height: LABEL_HEIGHT }} />
+      <View
+        style={{
+          height: LABEL_HEIGHT,
+          paddingHorizontal: 7,
+          borderRadius: LABEL_HEIGHT / 2,
+          justifyContent: 'center',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+        }}>
+        <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>{airport.code}</Text>
       </View>
     </Marker>
   );
