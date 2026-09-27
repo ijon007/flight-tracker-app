@@ -5,6 +5,10 @@ import { useEffect, useRef } from 'react';
 
 import { DrawerModeProvider, useDrawerMode, type DrawerMode } from '@/components/DrawerMode';
 
+export const unstable_settings = {
+  initialRouteName: 'index',
+};
+
 function Tabs() {
   const { mode, open, close, toggle } = useDrawerMode();
   const pathname = usePathname();
