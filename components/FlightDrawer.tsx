@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/immutability -- shared values are written from the gesture and the snap effect */
+import * as Haptics from 'expo-haptics';
 import { useFocusEffect } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { useCallback, useMemo } from 'react';
@@ -14,6 +15,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { scheduleOnRN } from 'react-native-worklets';
 
 import { AddFlightPanel } from '@/components/AddFlightPanel';
 import { useDrawerMode, type DrawerMode } from '@/components/DrawerMode';
@@ -26,6 +28,10 @@ const SPRING = { damping: 32, stiffness: 320, mass: 0.7 };
 const FADE = { duration: 220, easing: Easing.out(Easing.cubic) };
 /** Liquid glass stops rendering under an opacity-0 ancestor, so the fade never goes fully transparent. */
 const FADE_FROM = 0.25;
+
+const snapTick = () => {
+  void Haptics.selectionAsync();
+};
 
 // ponytail: one height shared by every tab's drawer (only one is visible), so a tab switch starts
 // from the size the last drawer had. -1 until the first drawer is shown. Move into context if a
@@ -85,6 +91,7 @@ export function FlightDrawer({ mode }: { mode: DrawerMode }) {
         .onEnd((e) => {
           const dragged = origin.value - e.translationY;
           const target = snapHeight(dragged, minH.value, maxH.value, e.velocityY, midH.value);
+          if (target !== rest.value) scheduleOnRN(snapTick);
           rest.value = target;
           height.value = reduceSv.value
             ? target
@@ -97,6 +104,7 @@ export function FlightDrawer({ mode }: { mode: DrawerMode }) {
     () =>
       Gesture.Tap().onEnd(() => {
         const target = tapTarget(height.value, minH.value, maxH.value, midH.value);
+        scheduleOnRN(snapTick);
         rest.value = target;
         height.value = reduceSv.value ? target : withSpring(target, SPRING);
       }),

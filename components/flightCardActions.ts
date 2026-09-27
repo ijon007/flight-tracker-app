@@ -5,16 +5,21 @@ import {
   requestCalendarPermissions,
 } from 'expo-calendar';
 import { createEventInCalendarAsync, requestCalendarPermissionsAsync } from 'expo-calendar/legacy';
+import { createURL } from 'expo-linking';
 import { Alert, Linking, Platform, Share } from 'react-native';
 
 import { airportByCode, formatDuration } from '@/components/addFlightCatalog';
 import type { MyFlight } from '@/components/DrawerMode';
+import { departureDate } from '@/components/flightLink';
 import { shareText } from '@/components/flightStackLayout';
 
 export async function shareFlight(flight: MyFlight) {
+  const url = createURL('/', {
+    queryParams: { flight: flight.code.replace(/\s+/g, ''), date: departureDate(flight) },
+  });
   try {
     await Share.share({
-      message: shareText({ ...flight, duration: formatDuration(flight.minutes) }),
+      message: `${shareText({ ...flight, duration: formatDuration(flight.minutes) })}\n${url}`,
     });
   } catch {
     // User dismissed the sheet; nothing to do.

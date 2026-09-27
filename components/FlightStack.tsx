@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { SymbolView } from 'expo-symbols';
 import { useEffect, useRef, useState } from 'react';
 import { AppState, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -5,6 +6,7 @@ import Animated, { useAnimatedStyle, useReducedMotion, withSpring } from 'react-
 
 import { airlineByCode, distanceKm } from '@/components/addFlightCatalog';
 import { useDrawerMode, type MyFlight } from '@/components/DrawerMode';
+import { EmptyFlights } from '@/components/EmptyFlights';
 import { addFlightToCalendar, shareFlight } from '@/components/flightCardActions';
 import { FlightCardMenu } from '@/components/FlightCardMenu';
 import { dateLabel, gradientFor, PEEK, placeCard, stackHeight, stripLabel } from '@/components/flightStackLayout';
@@ -249,13 +251,7 @@ export function FlightStack({ flights }: { flights: MyFlight[] }) {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingHorizontal: 14, paddingBottom: 22, gap: 28 }}>
       {upcoming.length === 0 ? (
-        <View className="items-center px-6" style={{ paddingTop: 20, gap: 6 }}>
-          <SymbolView name="airplane.departure" size={30} tintColor="rgba(255,255,255,0.6)" />
-          <Text className="mt-2 text-[17px] font-semibold text-white">No upcoming flights</Text>
-          <Text className="text-center text-[15px]" style={{ color: 'rgba(255,255,255,0.6)' }}>
-            Flights you add will show up here.
-          </Text>
-        </View>
+        <EmptyFlights />
       ) : (
         <View
           onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
@@ -284,6 +280,7 @@ export function FlightStack({ flights }: { flights: MyFlight[] }) {
                   }}
                   onRemove={() => removeFlight(flight.id)}
                   onPress={() => {
+                    void Haptics.selectionAsync();
                     setOpenId(open >= 0 ? null : flight.id);
                     scroll.current?.scrollTo({ y: 0 });
                   }}

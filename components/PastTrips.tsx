@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { SymbolView } from 'expo-symbols';
 import { Text, View } from 'react-native';
 
@@ -34,7 +35,10 @@ export function PastTrips({ trips }: { trips: { flight: MyFlight; status: Flight
           <View key={flight.id} style={{ height: ROW_H }}>
             <FlightCardMenu
               radius={RADIUS}
-              onPress={() => setOpenFlightId(selected ? null : flight.id)}
+              onPress={() => {
+                void Haptics.selectionAsync();
+                setOpenFlightId(selected ? null : flight.id);
+              }}
               onShare={onShare}
               onCalendar={() => {
                 void addFlightToCalendar(flight);

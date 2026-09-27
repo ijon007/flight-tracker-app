@@ -2,7 +2,10 @@ import { SymbolView } from 'expo-symbols';
 import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
 import { ScopedTheme } from 'uniwind';
 
-import { useSettings, type Settings } from '@/components/Settings';
+import { useDrawerMode } from '@/components/DrawerMode';
+import { travelStats } from '@/components/flightStats';
+import { GlassSurface } from '@/components/GlassSurface';
+import { useFlightFormat, useSettings, type Settings } from '@/components/Settings';
 import { Row, Section, SelectRow, SwitchRow } from '@/components/SettingsRows';
 
 const unitOptions = [
@@ -31,12 +34,36 @@ function initials(name: string) {
     .join('');
 }
 
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <View accessible accessibilityLabel={`${label}, ${value}`} style={{ flexGrow: 1, flexBasis: '45%' }}>
+      <GlassSurface style={{ borderRadius: 20, paddingHorizontal: 18, paddingVertical: 14, gap: 2 }}>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          className="text-[26px] font-semibold text-white"
+          style={{ letterSpacing: -0.6, fontVariant: ['tabular-nums'] }}>
+          {value}
+        </Text>
+        <Text
+          className="text-[13px] font-semibold"
+          style={{ color: 'rgba(255,255,255,0.92)', letterSpacing: 0.2 }}>
+          {label}
+        </Text>
+      </GlassSurface>
+    </View>
+  );
+}
+
 export function ProfilePanel() {
   const { name, units, timeFormat, timeZone, shareLocation, alerts, update } = useSettings();
   const setAlert = (key: keyof Settings['alerts']) => (on: boolean) =>
     update({ alerts: { ...alerts, [key]: on } });
 
   const monogram = initials(name);
+  const { myFlights } = useDrawerMode();
+  const fmt = useFlightFormat();
+  const stats = travelStats(myFlights);
 
   return (
     // The drawer glass is always dark, so its contents use the dark palette.
@@ -71,6 +98,30 @@ export function ProfilePanel() {
             className="mt-4 w-full text-center text-[22px] font-semibold text-ink"
             style={{ letterSpacing: -0.3, lineHeight: 28 }}
           />
+        </View>
+
+        <View className="gap-2.5">
+          <Text
+            accessibilityRole="header"
+            className="px-5 text-[13px] font-semibold uppercase tracking-wide"
+            style={{ color: 'rgba(255,255,255,0.7)' }}>
+            Travel Stats
+          </Text>
+          <View className="flex-row flex-wrap" style={{ gap: 10 }}>
+            <Stat label="Flights" value={String(stats.flights)} />
+            <Stat label="Distance" value={fmt.distance(stats.km)} />
+            <Stat label="In the air" value={fmt.duration(stats.minutes)} />
+            <Stat label={stats.countries === 1 ? 'Country' : 'Countries'} value={String(stats.countries)} />
+          </View>
+          {stats.longest ? (
+            <Section>
+              <Row label="Airports" value={String(stats.airports)} />
+              <Row
+                label="Longest flight"
+                value={`${stats.longest.flight.from}–${stats.longest.flight.to} · ${fmt.distance(stats.longest.km)}`}
+              />
+            </Section>
+          ) : null}
         </View>
 
         <Section title="Preferences">

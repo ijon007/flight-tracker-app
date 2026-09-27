@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
 
 import { airportByCode, dateKey, zonedTime } from '@/components/addFlightCatalog';
@@ -66,17 +67,17 @@ export function DrawerModeProvider({ children }: { children: ReactNode }) {
     (next: DrawerMode) => setMode((current) => (current === next ? 'flights' : next)),
     [],
   );
-  const addFlight = useCallback(
-    (flight: MyFlight) =>
-      setMyFlights((list) =>
-        list.some((f) => f.id === flight.id)
-          ? list
-          : [...list, flight].sort((a, b) => a.departsAt - b.departsAt),
-      ),
-    [],
-  );
+  const addFlight = useCallback((flight: MyFlight) => {
+    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setMyFlights((list) =>
+      list.some((f) => f.id === flight.id)
+        ? list
+        : [...list, flight].sort((a, b) => a.departsAt - b.departsAt),
+    );
+  }, []);
   const removeFlight = useCallback(
     (id: string) => {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       setMyFlights((list) => list.filter((f) => f.id !== id));
       setOpenFlightId((current) => (current === id ? null : current));
     },

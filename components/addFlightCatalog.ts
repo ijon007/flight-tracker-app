@@ -1,3 +1,5 @@
+import type { MyFlight } from '@/components/DrawerMode';
+
 export type CatalogKind = 'airport' | 'flight' | 'airline';
 
 export type Airport = {
@@ -125,6 +127,21 @@ export function searchCatalog(query: string, only?: CatalogKind): SearchResults 
     out[item.kind].push(item);
   }
   return out;
+}
+
+export function myFlightFrom(f: DatedFlight): MyFlight {
+  return {
+    id: `${f.airline}${f.number}-${f.date}`,
+    code: flightCode(f),
+    departsAt: zonedTime(f.date, f.departs, airportByCode(f.from)?.tz),
+    fromCity: cityOf(f.from),
+    toCity: cityOf(f.to),
+    from: f.from,
+    to: f.to,
+    departs: f.departs,
+    arrives: f.arrives,
+    minutes: f.minutes,
+  };
 }
 
 /** "AZ507", "az 507", "U2 8123". Returns null for anything that isn't shaped like a flight number. */
