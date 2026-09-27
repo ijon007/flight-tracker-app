@@ -1,8 +1,8 @@
 import { SymbolView } from 'expo-symbols';
-import { useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, View } from 'react-native';
 import { ScopedTheme } from 'uniwind';
 
+import { useSettings, type Settings } from '@/components/Settings';
 import { Row, Section, SelectRow, SwitchRow } from '@/components/SettingsRows';
 
 const unitOptions = [
@@ -22,8 +22,6 @@ const timeZoneOptions = [
   { value: 'utc', label: 'UTC' },
 ] as const;
 
-type Option<T extends readonly { value: string }[]> = T[number]['value'];
-
 function initials(name: string) {
   return name
     .split(/\s+/)
@@ -33,20 +31,10 @@ function initials(name: string) {
     .join('');
 }
 
-// ponytail: choices live in memory and reset on reload; persist once there is an account.
 export function ProfilePanel() {
-  const [name, setName] = useState('Alex Morgan');
-
-  const [units, setUnits] = useState<Option<typeof unitOptions>>('metric');
-  const [timeFormat, setTimeFormat] = useState<Option<typeof timeOptions>>('24h');
-  const [timeZone, setTimeZone] = useState<Option<typeof timeZoneOptions>>('local');
-
-  const [statusAlerts, setStatusAlerts] = useState(true);
-  const [gateChanges, setGateChanges] = useState(true);
-  const [delays, setDelays] = useState(true);
-  const [boarding, setBoarding] = useState(false);
-
-  const [shareLocation, setShareLocation] = useState(false);
+  const { name, units, timeFormat, timeZone, shareLocation, alerts, update } = useSettings();
+  const setAlert = (key: keyof Settings['alerts']) => (on: boolean) =>
+    update({ alerts: { ...alerts, [key]: on } });
 
   const monogram = initials(name);
 
@@ -72,7 +60,7 @@ export function ProfilePanel() {
           </View>
           <TextInput
             value={name}
-            onChangeText={setName}
+            onChangeText={(text) => update({ name: text })}
             placeholder="Name"
             placeholderTextColor="#8E8E93"
             accessibilityLabel="Name"
@@ -86,27 +74,31 @@ export function ProfilePanel() {
         </View>
 
         <Section title="Preferences">
-          <SelectRow label="Units" value={units} options={unitOptions} onChange={setUnits} />
+          <SelectRow label="Units" value={units} options={unitOptions} onChange={(v) => update({ units: v })} />
           <SelectRow
             label="Time format"
             value={timeFormat}
             options={timeOptions}
-            onChange={setTimeFormat}
+            onChange={(v) => update({ timeFormat: v })}
           />
           <SelectRow
             label="Show times in"
             value={timeZone}
             options={timeZoneOptions}
-            onChange={setTimeZone}
+            onChange={(v) => update({ timeZone: v })}
           />
-          <SwitchRow label="Use my location" value={shareLocation} onValueChange={setShareLocation} />
+          <SwitchRow
+            label="Use my location"
+            value={shareLocation}
+            onValueChange={(v) => update({ shareLocation: v })}
+          />
         </Section>
 
         <Section title="Notifications">
-          <SwitchRow label="Flight status" value={statusAlerts} onValueChange={setStatusAlerts} />
-          <SwitchRow label="Gate changes" value={gateChanges} onValueChange={setGateChanges} />
-          <SwitchRow label="Delays" value={delays} onValueChange={setDelays} />
-          <SwitchRow label="Boarding" value={boarding} onValueChange={setBoarding} />
+          <SwitchRow label="Flight status" value={alerts.status} onValueChange={setAlert('status')} />
+          <SwitchRow label="Gate changes" value={alerts.gate} onValueChange={setAlert('gate')} />
+          <SwitchRow label="Delays" value={alerts.delay} onValueChange={setAlert('delay')} />
+          <SwitchRow label="Boarding" value={alerts.boarding} onValueChange={setAlert('boarding')} />
         </Section>
 
         <View className="gap-4">

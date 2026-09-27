@@ -23,7 +23,9 @@ import {
 } from '@/components/addFlightCatalog';
 import { OtherDatePicker } from '@/components/addFlight/OtherDatePicker';
 import { Hint, IconBadge, ItemRow, KIND_ICON, PrimaryButton, SearchField } from '@/components/addFlight/parts';
+import { formatScheduleTime } from '@/components/flightFormat';
 import { GlassSurface } from '@/components/GlassSurface';
+import { useSettings } from '@/components/Settings';
 import { Section } from '@/components/SettingsRows';
 
 export type Step =
@@ -364,6 +366,7 @@ export function DateStep({ query, onPush }: { query: FlightQuery; onPush: Push }
 
 export function ResultsStep({ query, date, onPush }: { query: FlightQuery; date: string; onPush: Push }) {
   const flights = flightsOn(query, date);
+  const { timeFormat } = useSettings();
 
   return (
     <Scroll>
@@ -378,12 +381,12 @@ export function ResultsStep({ query, date, onPush }: { query: FlightQuery; date:
             <ItemRow
               key={`${f.airline}${f.number}`}
               leading={
-                <View className="w-[58px]">
+                <View style={{ width: timeFormat === '12h' ? 80 : 58 }}>
                   <Text className="text-[17px] font-semibold text-ink" style={{ fontVariant: ['tabular-nums'] }}>
-                    {f.departs}
+                    {formatScheduleTime(f.departs, timeFormat)}
                   </Text>
                   <Text className="text-[13px] text-white/65" style={{ fontVariant: ['tabular-nums'] }}>
-                    {f.arrives}
+                    {formatScheduleTime(f.arrives, timeFormat)}
                   </Text>
                 </View>
               }
@@ -427,6 +430,7 @@ export function ConfirmStep({
   onAdd: () => void;
 }) {
   const airline = airlineByCode(flight.airline)?.name ?? flight.airline;
+  const { timeFormat } = useSettings();
 
   return (
     <Scroll>
@@ -436,12 +440,12 @@ export function ConfirmStep({
           <Text className="text-[15px] text-white/65">{flightCode(flight)}</Text>
         </View>
         <View className="flex-row items-start">
-          <Endpoint code={flight.from} city={cityOf(flight.from)} time={flight.departs} align="left" />
+          <Endpoint code={flight.from} city={cityOf(flight.from)} time={formatScheduleTime(flight.departs, timeFormat)} align="left" />
           <View className="items-center px-2 pt-4">
             <SymbolView name="airplane" size={20} tintColor="rgba(255,255,255,0.65)" weight="semibold" />
             <Text className="mt-1 text-[13px] text-white/65">{formatDuration(flight.minutes)}</Text>
           </View>
-          <Endpoint code={flight.to} city={cityOf(flight.to)} time={flight.arrives} align="right" />
+          <Endpoint code={flight.to} city={cityOf(flight.to)} time={formatScheduleTime(flight.arrives, timeFormat)} align="right" />
         </View>
         <View style={{ height: 0.5, backgroundColor: 'rgba(255,255,255,0.18)' }} />
         <View className="flex-row justify-between">

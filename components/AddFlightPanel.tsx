@@ -12,7 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { ScopedTheme } from 'uniwind';
 
-import { airlineByCode, airportByCode, dateFromKey, flightCode } from '@/components/addFlightCatalog';
+import { airlineByCode, airportByCode, flightCode, zonedTime } from '@/components/addFlightCatalog';
 import {
   AirlineNumberStep,
   ConfirmStep,
@@ -158,7 +158,7 @@ export function AddFlightPanel() {
               addFlight({
                 id,
                 code: flightCode(f),
-                departsAt: dateFromKey(f.date, f.departs).getTime(),
+                departsAt: zonedTime(f.date, f.departs, airportByCode(f.from)?.tz),
                 fromCity: airportByCode(f.from)?.city ?? f.from,
                 toCity: airportByCode(f.to)?.city ?? f.to,
                 from: f.from,
