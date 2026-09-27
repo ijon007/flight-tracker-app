@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react';
 
 import { DrawerModeProvider, useDrawerMode } from '@/components/DrawerMode';
 import { SettingsProvider } from '@/components/Settings';
+import { useFlightLive } from '@/components/useFlightLive';
 
 export const unstable_settings = {
   initialRouteName: 'index',
@@ -14,6 +15,7 @@ function Tabs() {
   const { mode, open, close } = useDrawerMode();
   const pathname = usePathname();
   const pathRef = useRef(pathname);
+  useFlightLive();
 
   /** Profile and Search stay selected; each route shows its drawer on the map. */
   useEffect(() => {

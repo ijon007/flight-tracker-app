@@ -7,7 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "flighttracker",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.flighttracker.app",
@@ -41,7 +40,17 @@
           "resizeMode": "contain",
           "backgroundColor": "#F4F4F5"
         }
-      ]
+      ],
+      [
+        "expo-calendar",
+        {
+          "calendarPermission": "Adds your flights to your calendar.",
+          "writeOnlyCalendarPermission": "Adds your flights to your calendar.",
+          "writeOnlyAccess": true
+        }
+      ],
+      "expo-notifications",
+      "expo-widgets"
     ],
     "experiments": {
       "typedRoutes": true
