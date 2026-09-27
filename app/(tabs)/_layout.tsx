@@ -4,6 +4,7 @@ import { TabBarMinimizeProvider } from 'expo-glass-tabs';
 import { useEffect, useRef } from 'react';
 
 import { DrawerModeProvider, useDrawerMode } from '@/components/DrawerMode';
+import { SettingsProvider } from '@/components/Settings';
 
 export const unstable_settings = {
   initialRouteName: 'index',
@@ -58,10 +59,12 @@ function Tabs() {
 
 export default function TabLayout() {
   return (
-    <DrawerModeProvider>
-      <TabBarMinimizeProvider>
-        <Tabs />
-      </TabBarMinimizeProvider>
-    </DrawerModeProvider>
+    <SettingsProvider>
+      <DrawerModeProvider>
+        <TabBarMinimizeProvider>
+          <Tabs />
+        </TabBarMinimizeProvider>
+      </DrawerModeProvider>
+    </SettingsProvider>
   );
 }

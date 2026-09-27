@@ -1,6 +1,15 @@
 export type CatalogKind = 'airport' | 'flight' | 'airline';
 
-export type Airport = { code: string; name: string; city: string; country: string };
+export type Airport = {
+  code: string;
+  name: string;
+  city: string;
+  country: string;
+  latitude: number;
+  longitude: number;
+  /** IANA zone; schedule times are local to it. */
+  tz: string;
+};
 export type Airline = { code: string; name: string };
 
 export type Route = {
@@ -30,16 +39,16 @@ export type CatalogItem = {
 };
 
 export const AIRPORTS: Airport[] = [
-  { code: 'TIA', name: 'Tirana International', city: 'Tirana', country: 'Albania' },
-  { code: 'FCO', name: 'Rome Fiumicino', city: 'Rome', country: 'Italy' },
-  { code: 'OSL', name: 'Oslo Gardermoen', city: 'Oslo', country: 'Norway' },
-  { code: 'ARN', name: 'Stockholm Arlanda', city: 'Stockholm', country: 'Sweden' },
-  { code: 'FRA', name: 'Frankfurt', city: 'Frankfurt', country: 'Germany' },
-  { code: 'LHR', name: 'London Heathrow', city: 'London', country: 'United Kingdom' },
-  { code: 'CDG', name: 'Paris Charles de Gaulle', city: 'Paris', country: 'France' },
-  { code: 'AMS', name: 'Amsterdam Schiphol', city: 'Amsterdam', country: 'Netherlands' },
-  { code: 'HEL', name: 'Helsinki Vantaa', city: 'Helsinki', country: 'Finland' },
-  { code: 'CPH', name: 'Copenhagen Kastrup', city: 'Copenhagen', country: 'Denmark' },
+  { code: 'TIA', name: 'Tirana International', city: 'Tirana', country: 'Albania', latitude: 41.4147, longitude: 19.7206, tz: 'Europe/Tirane' },
+  { code: 'FCO', name: 'Rome Fiumicino', city: 'Rome', country: 'Italy', latitude: 41.8003, longitude: 12.2389, tz: 'Europe/Rome' },
+  { code: 'OSL', name: 'Oslo Gardermoen', city: 'Oslo', country: 'Norway', latitude: 60.1976, longitude: 11.1004, tz: 'Europe/Oslo' },
+  { code: 'ARN', name: 'Stockholm Arlanda', city: 'Stockholm', country: 'Sweden', latitude: 59.6519, longitude: 17.9186, tz: 'Europe/Stockholm' },
+  { code: 'FRA', name: 'Frankfurt', city: 'Frankfurt', country: 'Germany', latitude: 50.0379, longitude: 8.5622, tz: 'Europe/Berlin' },
+  { code: 'LHR', name: 'London Heathrow', city: 'London', country: 'United Kingdom', latitude: 51.47, longitude: -0.4543, tz: 'Europe/London' },
+  { code: 'CDG', name: 'Paris Charles de Gaulle', city: 'Paris', country: 'France', latitude: 49.0097, longitude: 2.5479, tz: 'Europe/Paris' },
+  { code: 'AMS', name: 'Amsterdam Schiphol', city: 'Amsterdam', country: 'Netherlands', latitude: 52.3105, longitude: 4.7683, tz: 'Europe/Amsterdam' },
+  { code: 'HEL', name: 'Helsinki Vantaa', city: 'Helsinki', country: 'Finland', latitude: 60.3172, longitude: 24.9633, tz: 'Europe/Helsinki' },
+  { code: 'CPH', name: 'Copenhagen Kastrup', city: 'Copenhagen', country: 'Denmark', latitude: 55.618, longitude: 12.6508, tz: 'Europe/Copenhagen' },
 ];
 
 export const AIRLINES: Airline[] = [
@@ -158,8 +167,43 @@ export function destinationsFrom(from: string): Airport[] {
   return AIRPORTS.filter((a) => codes.has(a.code));
 }
 
+/** Great-circle distance between two airports in km, or null if either is unknown. */
+export function distanceKm(from: string, to: string): number | null {
+  const a = airportByCode(from);
+  const b = airportByCode(to);
+  if (!a || !b) return null;
+  const rad = (d: number) => (d * Math.PI) / 180;
+  const dLat = rad(b.latitude - a.latitude);
+  const dLng = rad(b.longitude - a.longitude);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.latitude)) * Math.cos(rad(b.latitude)) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(h));
+}
+
 export function formatDuration(minutes: number) {
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
   return h === 0 ? `${m}m` : m === 0 ? `${h}h` : `${h}h ${m}m`;
+}
+
+/** Epoch ms of wall-clock `time` on date `key` in IANA zone `tz` (device zone when undefined). */
+export function zonedTime(key: string, time: string, tz: string | undefined) {
+  const [y, m, d] = key.split('-').map(Number);
+  const [hh, mm] = time.split(':').map(Number);
+  const wall = Date.UTC(y!, m! - 1, d!, hh!, mm!);
+  const format = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz,
+    hour12: false,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+  });
+  const offset = (ms: number) => {
+    const p = Object.fromEntries(format.formatToParts(ms).map((part) => [part.type, Number(part.value)]));
+    // Some engines print midnight as hour 24 when hour12 is false.
+    return Date.UTC(p.year!, p.month! - 1, p.day!, p.hour! % 24, p.minute!) - ms;
+  };
+  // Second pass lands on the right side of a DST change between the guess and the answer.
+  return wall - offset(wall - offset(wall));
 }
