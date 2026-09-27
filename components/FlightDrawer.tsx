@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AddFlightPanel } from '@/components/AddFlightPanel';
 import { useDrawerMode, type DrawerMode } from '@/components/DrawerMode';
 import { GlassSurface } from '@/components/GlassSurface';
-import { DRAWER_HEADER, resist, snapHeight } from '@/components/flightDrawerSnap';
+import { DRAWER_HEADER, resist, snapHeight, tapTarget } from '@/components/flightDrawerSnap';
 import { FlightStack } from '@/components/FlightStack';
 import { ProfilePanel } from '@/components/ProfilePanel';
 
@@ -59,10 +59,13 @@ export function FlightDrawer({ mode }: { mode: DrawerMode }) {
   const panel = mode !== 'flights';
   const tabZone = insets.bottom + TAB_BAR_HEIGHT - DRAWER_INSET;
   const collapsed = DRAWER_HEADER + tabZone;
-  const panelExpanded = Math.round(screenH - insets.top - 8);
-  const expanded = panel ? panelExpanded : Math.round(Math.min(screenH * 0.46, 440)) + tabZone;
+  const tall = Math.round(screenH - insets.top - 8);
+  /** Flights: closed, the short sheet, then this taller sheet. Other tabs only use closed and tall. */
+  const peek = Math.round(Math.min(screenH * 0.46, 440)) + tabZone;
+  const expanded = panel ? tall : peek;
   const minH = useSharedValue(collapsed);
-  const maxH = useSharedValue(expanded);
+  const midH = useSharedValue(expanded);
+  const maxH = useSharedValue(tall);
   const origin = useSharedValue(0);
   /** Where this drawer settles when its tab is shown; the flights drawer remembers the user's drag. */
   const rest = useSharedValue(expanded);
@@ -81,24 +84,23 @@ export function FlightDrawer({ mode }: { mode: DrawerMode }) {
         })
         .onEnd((e) => {
           const dragged = origin.value - e.translationY;
-          const target = snapHeight(dragged, minH.value, maxH.value, e.velocityY);
+          const target = snapHeight(dragged, minH.value, maxH.value, e.velocityY, midH.value);
           rest.value = target;
           height.value = reduceSv.value
             ? target
             : withSpring(target, { ...SPRING, velocity: -e.velocityY });
         }),
-    [maxH, minH, origin, reduceSv, rest],
+    [maxH, midH, minH, origin, reduceSv, rest],
   );
 
   const tap = useMemo(
     () =>
       Gesture.Tap().onEnd(() => {
-        const mid = (minH.value + maxH.value) / 2;
-        const target = height.value < mid ? maxH.value : minH.value;
+        const target = tapTarget(height.value, minH.value, maxH.value, midH.value);
         rest.value = target;
         height.value = reduceSv.value ? target : withSpring(target, SPRING);
       }),
-    [maxH, minH, reduceSv, rest],
+    [maxH, midH, minH, reduceSv, rest],
   );
 
   /**
@@ -109,19 +111,20 @@ export function FlightDrawer({ mode }: { mode: DrawerMode }) {
     useCallback(() => {
       reduceSv.value = reducedMotion;
       minH.value = collapsed;
-      maxH.value = expanded;
-      const target = panel ? expanded : Math.min(Math.max(rest.value, collapsed), expanded);
+      midH.value = panel ? tall : peek;
+      maxH.value = tall;
+      const target = panel ? tall : snapHeight(rest.value, collapsed, tall, 0, peek);
       height.value = height.value < 0 || reducedMotion ? target : withSpring(target, SPRING);
       fade.value = reducedMotion ? 1 : withTiming(1, FADE);
       return () => {
         fade.value = FADE_FROM;
       };
-    }, [collapsed, expanded, fade, maxH, minH, panel, reduceSv, reducedMotion, rest]),
+    }, [collapsed, fade, maxH, midH, minH, panel, peek, reduceSv, reducedMotion, rest, tall]),
   );
 
   const gesture = useMemo(() => Gesture.Exclusive(pan, tap), [pan, tap]);
 
-  const sheet = useAnimatedStyle(() => ({ height: height.value < 0 ? maxH.value : height.value }));
+  const sheet = useAnimatedStyle(() => ({ height: height.value < 0 ? midH.value : height.value }));
   const content = useAnimatedStyle(() => ({
     opacity: fade.value,
     transform: [{ translateY: ((1 - fade.value) / (1 - FADE_FROM)) * 8 }],
