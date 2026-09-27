@@ -3,40 +3,29 @@ import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { TabBarMinimizeProvider } from 'expo-glass-tabs';
 import { useEffect, useRef } from 'react';
 
-import { DrawerModeProvider, useDrawerMode, type DrawerMode } from '@/components/DrawerMode';
+import { DrawerModeProvider, useDrawerMode } from '@/components/DrawerMode';
 
 export const unstable_settings = {
   initialRouteName: 'index',
 };
 
 function Tabs() {
-  const { mode, open, close, toggle } = useDrawerMode();
+  const { mode, open, close } = useDrawerMode();
   const pathname = usePathname();
-  const modeRef = useRef(mode);
   const pathRef = useRef(pathname);
-  useEffect(() => {
-    modeRef.current = mode;
-  }, [mode]);
 
-  /** The profile tab is selected natively; its map shows the profile drawer. */
+  /** Profile and Search stay selected; each route shows its drawer on the map. */
   useEffect(() => {
     pathRef.current = pathname;
     if (pathname === '/profile') open('profile');
+    if (pathname === '/search') open('add');
   }, [open, pathname]);
 
-  /** Closing the profile drawer returns to the Flights tab. */
+  /** Closing those drawers returns to the Flights tab. */
   useEffect(() => {
-    if (mode === 'flights' && pathRef.current === '/profile') router.navigate('/');
+    const path = pathRef.current;
+    if (mode === 'flights' && (path === '/profile' || path === '/search')) router.navigate('/');
   }, [mode]);
-
-  /** Drawer tabs stay on the map; the press only switches what the drawer shows. */
-  const drawerTab = (target: DrawerMode) => ({
-    tabPress: () => {
-      const opening = modeRef.current !== target;
-      toggle(target);
-      if (opening) router.navigate('/');
-    },
-  });
 
   return (
     <NativeTabs minimizeBehavior="never">
@@ -59,9 +48,7 @@ function Tabs() {
       <NativeTabs.Trigger
         name="search"
         role="search"
-        disableAutomaticContentInsets
-        unstable_nativeProps={{ preventNativeSelection: true }}
-        listeners={drawerTab('add')}>
+        disableAutomaticContentInsets>
         <NativeTabs.Trigger.Label>Search</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon sf="magnifyingglass" md="search" />
       </NativeTabs.Trigger>

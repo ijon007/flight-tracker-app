@@ -29,6 +29,8 @@ import { useDrawerMode } from '@/components/DrawerMode';
 const SPRING = { damping: 32, stiffness: 320, mass: 0.7 };
 /** Where the covered step sits while the next one is on top, as a share of the width. */
 const PARALLAX = 0.3;
+/** Liquid glass stops rendering under an opacity-0 ancestor, so entering steps start slightly visible. */
+const ENTER_FROM = 0.25;
 
 function titleFor(step: Step): string {
   switch (step.kind) {
@@ -110,9 +112,9 @@ export function AddFlightPanel() {
     'worklet';
     const d = dir.value;
     if (d === 0) return { initialValues: {}, animations: {} };
-    if (reduced) return { initialValues: { opacity: 0 }, animations: { opacity: withTiming(1, { duration: 200 }) } };
+    if (reduced) return { initialValues: { opacity: ENTER_FROM }, animations: { opacity: withTiming(1, { duration: 200 }) } };
     return {
-      initialValues: { opacity: 0, transform: [{ translateX: d > 0 ? v.windowWidth : -v.windowWidth * PARALLAX }] },
+      initialValues: { opacity: ENTER_FROM, transform: [{ translateX: d > 0 ? v.windowWidth : -v.windowWidth * PARALLAX }] },
       animations: {
         opacity: withTiming(1, { duration: 220 }),
         transform: [{ translateX: withSpring(0, SPRING) }],

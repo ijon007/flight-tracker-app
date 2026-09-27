@@ -5,6 +5,7 @@ import MapView, { type Camera, type MapType, type UserLocationChangeEvent } from
 import { SymbolView, type SFSymbol } from 'expo-symbols';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import type { DrawerMode } from '@/components/DrawerMode';
 import { FlightDrawer } from '@/components/FlightDrawer';
 import { GlassSurface } from '@/components/GlassSurface';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -28,7 +29,7 @@ type Coord = { latitude: number; longitude: number };
 // looking like one map when switching tabs. Move into context if more screens start reading it.
 const shared: { camera: Camera; satellite: boolean } = { camera: globe, satellite: true };
 
-export function MapScreen() {
+export function MapScreen({ drawer }: { drawer: DrawerMode }) {
   const scheme = useColorScheme();
   const insets = useSafeAreaInsets();
   const map = useRef<MapView>(null);
@@ -122,7 +123,7 @@ export function MapScreen() {
           onPress={centerOnUser}
         />
       </View>
-      <FlightDrawer />
+      <FlightDrawer mode={drawer} />
     </View>
   );
 }
