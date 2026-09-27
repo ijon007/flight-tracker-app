@@ -49,7 +49,6 @@
           "writeOnlyAccess": true
         }
       ],
-      "expo-notifications",
       "expo-widgets"
     ],
     "experiments": {

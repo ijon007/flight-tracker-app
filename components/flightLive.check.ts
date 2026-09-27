@@ -1,5 +1,5 @@
 import type { MyFlight } from './DrawerMode';
-import { ACTIVITY_WINDOW_MS, BOARDING_LEAD_MS, activityFor, planAlerts, type TrackedFlight } from './flightLive';
+import { ACTIVITY_WINDOW_MS, activityFor, type TrackedFlight } from './flightLive';
 import type { FlightStatus } from './flightStatus';
 
 function assert(condition: boolean, message: string) {
@@ -14,8 +14,6 @@ const flight = (id: string, inHours: number): MyFlight => ({
 const status = (f: MyFlight, patch: Partial<FlightStatus> = {}): FlightStatus => ({
   phase: 'scheduled', label: 'On Time', delayMinutes: 0, departsAt: f.departsAt, arrivesAt: f.departsAt + HOUR, ...patch,
 });
-const all = { status: true, gate: true, delay: true, boarding: true };
-
 const soon = flight('SOON', 2);
 const later = flight('LATER', 1);
 const landed = flight('LANDED', -3);
@@ -29,21 +27,4 @@ assert(activityFor(tracked, now)?.id === 'LATER', 'activity tracks the soonest n
 assert(activityFor(tracked.slice(2), now) === null, 'no activity when every flight is past');
 const far = flight('FAR', ACTIVITY_WINDOW_MS / HOUR + 1);
 assert(activityFor([{ flight: far, status: status(far) }], now) === null, 'no activity outside the window');
-
-const ids = planAlerts(tracked, all, now).map((a) => a.id);
-assert(ids.includes('SOON:delay') && ids.includes('SOON:gate'), 'delay and gate fire once-now alerts');
-assert(!ids.some((id) => id.startsWith('LANDED')), 'past flights get no alerts');
-assert(!ids.includes('LATER:gate') && !ids.includes('LATER:delay'), 'no gate or delay alert without data');
-const boarding = planAlerts(tracked, all, now).find((a) => a.id === 'LATER:boarding');
-assert(boarding?.at === later.departsAt - BOARDING_LEAD_MS, 'boarding scheduled at the window start');
-
-const none = planAlerts(tracked, { status: false, gate: false, delay: false, boarding: false }, now);
-assert(none.length === 0, 'switches off means no alerts');
-const onlyGate = planAlerts(tracked, { status: false, gate: true, delay: false, boarding: false }, now);
-assert(onlyGate.length === 1 && onlyGate[0]!.id === 'SOON:gate', 'each switch is respected');
-
-const cancelled = flight('CXL', 5);
-const cxl = planAlerts([{ flight: cancelled, status: status(cancelled, { phase: 'cancelled', label: 'Cancelled' }) }], all, now);
-assert(cxl.length === 1 && cxl[0]!.id === 'CXL:cancelled', 'cancelled flights alert once and nothing else');
-
 console.log('flightLive ok');

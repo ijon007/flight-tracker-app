@@ -5,7 +5,7 @@ import { ScopedTheme } from 'uniwind';
 import { useDrawerMode } from '@/components/DrawerMode';
 import { travelStats } from '@/components/flightStats';
 import { GlassSurface } from '@/components/GlassSurface';
-import { useFlightFormat, useSettings, type Settings } from '@/components/Settings';
+import { useFlightFormat, useSettings } from '@/components/Settings';
 import { Row, Section, SelectRow, SwitchRow } from '@/components/SettingsRows';
 
 const unitOptions = [
@@ -56,9 +56,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 }
 
 export function ProfilePanel() {
-  const { name, units, timeFormat, timeZone, shareLocation, alerts, update } = useSettings();
-  const setAlert = (key: keyof Settings['alerts']) => (on: boolean) =>
-    update({ alerts: { ...alerts, [key]: on } });
+  const { name, units, timeFormat, timeZone, shareLocation, update } = useSettings();
 
   const monogram = initials(name);
   const { myFlights } = useDrawerMode();
@@ -143,13 +141,6 @@ export function ProfilePanel() {
             value={shareLocation}
             onValueChange={(v) => update({ shareLocation: v })}
           />
-        </Section>
-
-        <Section title="Notifications">
-          <SwitchRow label="Flight status" value={alerts.status} onValueChange={setAlert('status')} />
-          <SwitchRow label="Gate changes" value={alerts.gate} onValueChange={setAlert('gate')} />
-          <SwitchRow label="Delays" value={alerts.delay} onValueChange={setAlert('delay')} />
-          <SwitchRow label="Boarding" value={alerts.boarding} onValueChange={setAlert('boarding')} />
         </Section>
 
         <View className="gap-4">

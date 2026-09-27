@@ -18,7 +18,6 @@ export type Settings = {
   timeFormat: TimeFormat;
   timeZone: TimeZonePref;
   shareLocation: boolean;
-  alerts: { status: boolean; gate: boolean; delay: boolean; boarding: boolean };
 };
 
 type SettingsApi = Settings & { update: (patch: Partial<Settings>) => void };
@@ -29,7 +28,6 @@ const defaults: Settings = {
   timeFormat: '24h',
   timeZone: 'local',
   shareLocation: false,
-  alerts: { status: true, gate: true, delay: true, boarding: false },
 };
 
 const SettingsContext = createContext<SettingsApi | null>(null);
