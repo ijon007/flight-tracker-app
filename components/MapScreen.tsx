@@ -1,12 +1,20 @@
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
-import MapView, { type Camera, type MapType, type UserLocationChangeEvent } from 'react-native-maps';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import MapView, {
+  Marker,
+  Polyline,
+  type Camera,
+  type MapType,
+  type UserLocationChangeEvent,
+} from 'react-native-maps';
 import { SymbolView, type SFSymbol } from 'expo-symbols';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import type { DrawerMode } from '@/components/DrawerMode';
+import type { Airport } from '@/components/addFlightCatalog';
+import { useDrawerMode, type DrawerMode } from '@/components/DrawerMode';
 import { FlightDrawer } from '@/components/FlightDrawer';
+import { flightRoute } from '@/components/flightRoute';
 import { GlassSurface } from '@/components/GlassSurface';
 import { useColorScheme } from '@/components/useColorScheme';
 
@@ -36,6 +44,27 @@ export function MapScreen({ drawer }: { drawer: DrawerMode }) {
   const user = useRef<Coord | null>(null);
   const [satellite, setSatellite] = useState(shared.satellite);
   const [following, setFollowing] = useState(false);
+  const { height: screenH } = useWindowDimensions();
+  const { openFlightId, myFlights } = useDrawerMode();
+  const open = drawer === 'flights' ? myFlights.find((f) => f.id === openFlightId) : undefined;
+  const from = open?.from;
+  const to = open?.to;
+  const route = useMemo(() => (from && to ? flightRoute(from, to) : null), [from, to]);
+  if (route && following) setFollowing(false);
+
+  useEffect(() => {
+    if (!route) return;
+    map.current?.fitToCoordinates(route.path, {
+      // ponytail: mirrors FlightDrawer's open flights height; frames above it even if the user drags it lower.
+      edgePadding: {
+        top: insets.top + 48,
+        right: 72,
+        bottom: Math.min(screenH * 0.46, 440) + insets.bottom + 40,
+        left: 48,
+      },
+      animated: true,
+    });
+  }, [route, insets.top, insets.bottom, screenH]);
 
   useFocusEffect(
     useCallback(() => {
@@ -107,8 +136,21 @@ export function MapScreen({ drawer }: { drawer: DrawerMode }) {
           maxCenterCoordinateDistance: satellite ? GLOBE_ALTITUDE : STANDARD_MAX_ALTITUDE,
           animated: false,
         }}
-        userInterfaceStyle={scheme === 'dark' ? 'dark' : 'light'}
-      />
+        userInterfaceStyle={scheme === 'dark' ? 'dark' : 'light'}>
+        {route && (
+          <>
+            <Polyline
+              coordinates={[route.from, route.to]}
+              geodesic
+              strokeColor={satellite ? '#FFFFFF' : '#0A84FF'}
+              strokeWidth={3}
+              lineCap="round"
+            />
+            <AirportMarker airport={route.from} />
+            <AirportMarker airport={route.to} />
+          </>
+        )}
+      </MapView>
       <View
         pointerEvents="box-none"
         style={{ position: 'absolute', top: insets.top + 8, right: 12, gap: 10 }}>
@@ -125,6 +167,42 @@ export function MapScreen({ drawer }: { drawer: DrawerMode }) {
       </View>
       <FlightDrawer mode={drawer} />
     </View>
+  );
+}
+
+const LABEL_HEIGHT = 20;
+
+/** Apple Maps centers the marker view on the coordinate; the empty spacer keeps the dot there. */
+function AirportMarker({ airport }: { airport: Airport }) {
+  return (
+    <Marker
+      coordinate={airport}
+      title={airport.name}
+      accessibilityLabel={`${airport.code}, ${airport.name}`}>
+      <View style={{ alignItems: 'center', gap: 3 }}>
+        <View
+          style={{
+            height: LABEL_HEIGHT,
+            paddingHorizontal: 7,
+            borderRadius: LABEL_HEIGHT / 2,
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0,0,0,0.7)',
+          }}>
+          <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '700' }}>{airport.code}</Text>
+        </View>
+        <View
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: 5,
+            borderWidth: 2,
+            borderColor: '#FFFFFF',
+            backgroundColor: '#0A84FF',
+          }}
+        />
+        <View style={{ height: LABEL_HEIGHT }} />
+      </View>
+    </Marker>
   );
 }
 
