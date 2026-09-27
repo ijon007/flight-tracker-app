@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/immutability -- shared values are written from the gesture and the snap effect */
+import { SymbolView } from 'expo-symbols';
 import { useEffect, useMemo, useRef } from 'react';
-import { ScrollView, Text, useWindowDimensions, View } from 'react-native';
+import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -30,41 +31,7 @@ const DRAWER_INSET = 10;
 // ponytail: concentric with modern iPhone corners (~52) minus the inset. Read the real display radius if it looks off on older devices.
 const DRAWER_RADIUS = 42;
 
-const flights = [
-  {
-    id: 'AZ507',
-    code: 'AZ 507',
-    hours: 10,
-    fromCity: 'Tirana',
-    toCity: 'Rome',
-    from: 'TIA',
-    to: 'FCO',
-    departs: '05:40',
-    arrives: '07:00',
-  },
-  {
-    id: 'SK412',
-    code: 'SK 412',
-    hours: 28,
-    fromCity: 'Oslo',
-    toCity: 'Stockholm',
-    from: 'OSL',
-    to: 'ARN',
-    departs: '08:15',
-    arrives: '09:15',
-  },
-  {
-    id: 'LH800',
-    code: 'LH 800',
-    hours: 46,
-    fromCity: 'Frankfurt',
-    toCity: 'London',
-    from: 'FRA',
-    to: 'LHR',
-    departs: '14:05',
-    arrives: '14:55',
-  },
-];
+const hoursUntil = (at: number) => Math.max(0, Math.round((at - Date.now()) / 3_600_000));
 
 function Leg({ code, time }: { code: string; time: string }) {
   return (
@@ -79,7 +46,9 @@ function Leg({ code, time }: { code: string; time: string }) {
 export function FlightDrawer() {
   const insets = useSafeAreaInsets();
   const { height: screenH } = useWindowDimensions();
-  const { mode } = useDrawerMode();
+  const { mode, myFlights, header: override } = useDrawerMode();
+  const header = mode === 'add' ? override : null;
+  const title = header?.title ?? TITLES[mode];
   const reducedMotion = useReducedMotion();
   /** Add Flight and Profile open the tall sheet; collapsing keeps the current mode. */
   const panel = mode !== 'flights';
@@ -187,7 +156,7 @@ export function FlightDrawer() {
         <GestureDetector gesture={gesture}>
           <View
             accessibilityRole="button"
-            accessibilityLabel={TITLES[mode]}
+            accessibilityLabel={title}
             style={{ height: DRAWER_HEADER, paddingHorizontal: 22 }}>
             <View
               style={{
@@ -200,28 +169,52 @@ export function FlightDrawer() {
               }}
             />
             <Text
+              numberOfLines={1}
               className="mt-2 text-[28px] font-semibold text-white"
-              style={{ letterSpacing: -0.4 }}>
-              {TITLES[mode]}
+              style={{ letterSpacing: -0.4, marginLeft: header ? 40 : 0 }}>
+              {title}
             </Text>
           </View>
         </GestureDetector>
+        {/* Outside the detector so its tap doesn't also toggle the drawer. */}
+        {header ? (
+          <Pressable
+            onPress={header.onBack}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            hitSlop={8}
+            style={{ position: 'absolute', left: 14, top: 20 }}>
+            <GlassSurface
+              colorScheme="dark"
+              isInteractive
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}>
+              <SymbolView name="chevron.left" size={16} tintColor="#FFFFFF" weight="semibold" />
+            </GlassSurface>
+          </Pressable>
+        ) : null}
         {/* Profile stays mounted so its edits survive switching drawer modes. */}
         <View style={{ flex: 1, display: mode === 'profile' ? 'flex' : 'none' }}>
           <ProfilePanel />
         </View>
-        {mode === 'profile' ? null : mode === 'add' ? (
+        <View style={{ flex: 1, display: mode === 'add' ? 'flex' : 'none' }}>
           <AddFlightPanel />
-        ) : (
+        </View>
+        {mode !== 'flights' ? null : (
           <ScrollView
             style={{ flex: 1 }}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingHorizontal: 22, paddingBottom: 22, gap: 18 }}>
-            {flights.map((flight) => (
+            {myFlights.map((flight) => (
               <View key={flight.id} className="flex-row">
                 <View className="w-[72px]">
                   <Text className="text-[40px] font-semibold leading-none text-white">
-                    {flight.hours}
+                    {hoursUntil(flight.departsAt)}
                   </Text>
                   <Text className="mt-1 text-[11px] font-semibold tracking-widest text-white/45">
                     HOURS
