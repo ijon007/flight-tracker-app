@@ -55,19 +55,19 @@ export function FlightDrawer({ mode }: { mode: DrawerMode }) {
   const header = mode === 'add' ? override : null;
   const title = header?.title ?? TITLES[mode];
   const reducedMotion = useReducedMotion();
-  /** Add Flight and Profile open the tall sheet. */
-  const panel = mode !== 'flights';
+  /** Profile only opens the tall sheet. */
+  const panel = mode === 'profile';
   const tabZone = insets.bottom + TAB_BAR_HEIGHT - DRAWER_INSET;
   const collapsed = DRAWER_HEADER + tabZone;
   const tall = Math.round(screenH - insets.top - 8);
-  /** Flights: closed, the short sheet, then this taller sheet. Other tabs only use closed and tall. */
+  /** Flights and Add Flight: closed, the short sheet, then this taller sheet. Profile only uses closed and tall. */
   const peek = Math.round(Math.min(screenH * 0.46, 440)) + tabZone;
   const expanded = panel ? tall : peek;
   const minH = useSharedValue(collapsed);
   const midH = useSharedValue(expanded);
   const maxH = useSharedValue(tall);
   const origin = useSharedValue(0);
-  /** Where this drawer settles when its tab is shown; the flights drawer remembers the user's drag. */
+  /** Where this drawer settles when its tab is shown; Flights and Add Flight remember the user's drag. */
   const rest = useSharedValue(expanded);
   const reduceSv = useSharedValue(reducedMotion);
   const fade = useSharedValue(FADE_FROM);
